@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Revo Fixer | Connect Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --bg: #0a0b14;
+            --card: #141827;
+            --border: #1e2240;
+            --input: #0d1020;
+            --blue: #448AFF;
+            --text: #ffffff;
+            --text2: #bcc6e0;
+            --text3: #8899cc;
+            --text4: #5a6a99;
+            --green: #2ed573;
+            --red: #ff4757;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .back-btn {
+            background: rgba(68,138,255,0.1);
+            border: 1px solid rgba(68,138,255,0.2);
+            color: var(--blue);
+            width: 38px; height: 38px; border-radius: 8px;
+            cursor: pointer; font-size: 17px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s;
+        }
+        .back-btn:hover { background: rgba(68,138,255,0.2); }
+        .header h1 { font-size: 17px; font-weight: 800; }
+        .header h1 span { color: var(--blue); }
+
+        /* Main */
+        .main-content { padding: 20px; max-width: 500px; margin: 0 auto; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title i { color: var(--blue); }
+
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text3);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+            display: block;
+        }
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--input);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .form-input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 15px rgba(68,138,255,0.1);
+        }
+        .form-input::placeholder {
+            color: #3a4060;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--blue), #2962FF);
+            color: #fff;
+            font-weight: 800;
+            box-shadow: 0 6px 20px rgba(68,138,255,0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(68,138,255,0.45);
+        }
+        .btn-danger {
+            background: transparent;
+            border: 1px solid var(--red);
+            color: var(--red);
+            margin-top: 8px;
+        }
+        .btn-danger:hover {
+            background: rgba(255,71,87,0.1);
+        }
+
+        /* Connected Info */
+        .info-box {
+            background: rgba(68,138,255,0.06);
+            border: 1px solid rgba(68,138,255,0.15);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+        .info-row:not(:last-child) {
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .info-label {
+            color: var(--text3);
+            width: 90px;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+        .info-value {
+            color: var(--text);
+            word-break: break-all;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast-el {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+            min-width: 260px;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-el.success { border-left: 4px solid var(--green); }
+        .toast-el.error { border-left: 4px solid var(--red); }
+        .toast-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            color: #fff;
+        }
+        .toast-el.success .toast-icon { background: var(--green); }
+        .toast-el.error .toast-icon { background: var(--red); }
+        .toast-title { font-weight: 600; font-size: 12px; }
+        .toast-msg { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+        @media (max-width: 400px) {
+            .card { padding: 18px 14px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-left">
+            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
+            <h1><span>CONNECT</span> PROFILE</h1>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- MAIN -->
+    <div class="main-content">
+
+        <!-- Current Connections -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-link"></i> Connected Accounts</div>
+            <div id="currentConnections">
+                <div style="color:var(--text4);text-align:center;padding:20px;">No accounts connected</div>
+            </div>
+        </div>
+
+        <!-- Connect Form -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-plus-circle"></i> Connect New Account</div>
+            
+            <div class="form-group">
+                <label class="form-label">👤 Username</label>
+                <input type="text" class="form-input" id="connectUsername" placeholder="Enter your username">
+            </div>
+            <div class="form-group">
+                <label class="form-label">🌐 Betting Link (Optional)</label>
+                <input type="url" class="form-input" id="connectLink" placeholder="https://example.com">
+            </div>
+            <button class="btn btn-primary" onclick="saveConnection()">
+                <i class="fas fa-link"></i> CONNECT
+            </button>
+            
+            <button class="btn btn-danger" onclick="disconnectAll()" style="margin-top:12px;">
+                <i class="fas fa-unlink"></i> DISCONNECT ALL
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Firebase Configuration - REVO FIXER MAIN PROJECT
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7UVJOB_jWbPuRAqkVXJfq4MgOYUS8hds",
+            authDomain: "revo-fixer-18514.firebaseapp.com",
+            databaseURL: "https://revo-fixer-18514-default-rtdb.firebaseio.com",
+            projectId: "revo-fixer-18514",
+            storageBucket: "revo-fixer-18514.firebasestorage.app",
+            messagingSenderId: "556764878482",
+            appId: "1:556764878482:web:ba5c72a25db0127572384b"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+            window.location.href = 'index.html';
+        }
+
+        function goBack() {
+            window.location.href = 'dashboard.html';
+        }
+
+        function showToast(type, title, msg) {
+            const container = document.getElementById('toastContainer');
+            const id = 'toast_' + Date.now();
+            const icon = type === 'success' ? '✓' : '✕';
+            container.innerHTML += `<div class="toast-el ${type}" id="${id}">
+                <div class="toast-icon">${icon}</div>
+                <div>
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-msg">${msg}</div>
+                </div>
+            </div>`;
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                if(el) el.remove();
+            }, 4000);
+        }
+
+        function loadConnections() {
+            db.ref('users/' + userId + '/connections').on('value', (snapshot) => {
+                const container = document.getElementById('currentConnections');
+                const data = snapshot.val();
+                
+                if (!data || (!data.username && !data.bettingLink)) {
+                    container.innerHTML = '<div style="color:var(--text4);text-align:center;padding:20px;">No accounts connected</div>';
+                    return;
+                }
+                
+                let html = '<div class="info-box">';
+                if (data.username) {
+                    html += `<div class="info-row">
+                        <span class="info-label">Username</span>
+                        <span class="info-value">${escapeHtml(data.username)}</span>
+                    </div>`;
+                }
+                if (data.bettingLink) {
+                    html += `<div class="info-row">
+                        <span class="info-label">Link</span>
+                        <span class="info-value"><a href="${data.bettingLink}" target="_blank" style="color:var(--blue);">${data.bettingLink}</a></span>
+                    </div>`;
+                }
+                html += '</div>';
+                container.innerHTML = html;
+            });
+        }
+
+        function saveConnection() {
+            const username = document.getElementById('connectUsername').value.trim();
+            const link = document.getElementById('connectLink').value.trim();
+            
+            if (!username && !link) {
+                showToast('error', 'Error', 'Please enter at least one field');
+                return;
+            }
+            
+            const connections = {};
+            if (username) connections.username = username;
+            if (link) connections.bettingLink = link;
+            
+            db.ref('users/' + userId + '/connections').set(connections)
+                .then(() => {
+                    // Add activity
+                    db.ref('users/' + userId + '/activity').push({
+                        text: 'Profile connected successfully',
+                        time: Date.now()
+                    });
+                    showToast('success', 'Connected!', 'Profile linked successfully');
+                    document.getElementById('connectUsername').value = '';
+                    document.getElementById('connectLink').value = '';
+                })
+                .catch((error) => {
+                    showToast('error', 'Error', 'Failed to connect: ' + error.message);
+                });
+        }
+
+        function disconnectAll() {
+            if (!confirm('⚠️ Remove all connected accounts? This action cannot be undone.')) return;
+            
+            db.ref('users/' + userId + '/connections').set({})
+                .then(() => {
+                    db.ref('users/' + userId + '/activity').push({
+                        text: 'All accounts disconnected',
+                        time: Date.now()
+                    });
+                    showToast('success', 'Disconnected', 'All accounts removed successfully');
+                })
+                .catch((error) => {
+                    showToast('error', 'Error', 'Failed to disconnect: ' + error.message);
+                });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // Load connections on page load
+        loadConnections();
+    </script>
+</body>
+</html>

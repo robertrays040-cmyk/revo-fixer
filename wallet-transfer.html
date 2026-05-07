@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Revo Fixer | Wallet Transfer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --bg: #0a0b14;
+            --card: #141827;
+            --border: #1e2240;
+            --input: #0d1020;
+            --blue: #448AFF;
+            --text: #ffffff;
+            --text2: #bcc6e0;
+            --text3: #8899cc;
+            --text4: #5a6a99;
+            --green: #2ed573;
+            --red: #ff4757;
+            --orange: #ffa502;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .back-btn {
+            background: rgba(68,138,255,0.1);
+            border: 1px solid rgba(68,138,255,0.2);
+            color: var(--blue);
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+        .back-btn:hover {
+            background: rgba(68,138,255,0.2);
+        }
+        .header h1 {
+            font-size: 16px;
+            font-weight: 800;
+        }
+        .header h1 span {
+            color: var(--blue);
+        }
+
+        /* Main */
+        .main-content {
+            padding: 20px;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        /* Balance Card */
+        .balance-card {
+            background: rgba(68,138,255,0.05);
+            border: 1px solid rgba(68,138,255,0.15);
+            border-radius: 18px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .balance-label {
+            font-size: 11px;
+            color: var(--text3);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .balance-amount {
+            font-size: 38px;
+            font-weight: 900;
+            color: var(--blue);
+        }
+
+        /* Card */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text3);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i {
+            color: var(--blue);
+        }
+
+        /* Connected Box */
+        .connected-box {
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+        }
+        .connected-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+        .connected-row:not(:last-child) {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .connected-label {
+            color: var(--text3);
+            font-size: 10px;
+            width: 70px;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+        .connected-value {
+            color: var(--text);
+            font-weight: 500;
+            word-break: break-all;
+        }
+        .no-data {
+            color: var(--text4);
+            font-size: 12px;
+            text-align: center;
+            padding: 12px;
+        }
+
+        /* Transfer Button */
+        .transfer-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, var(--blue), #2962FF);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(68,138,255,0.3);
+        }
+        .transfer-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(68,138,255,0.45);
+        }
+        .transfer-btn:active {
+            transform: scale(0.98);
+        }
+        .transfer-btn:disabled {
+            background: #1e2240;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Notification */
+        .notif-toast {
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 16px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+        .notif-toast.show {
+            display: block;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .notif-success {
+            background: rgba(46,213,115,0.12);
+            border: 1px solid var(--green);
+            color: var(--green);
+        }
+        .notif-insufficient {
+            background: rgba(255,165,2,0.12);
+            border: 1px solid var(--orange);
+            color: var(--orange);
+        }
+        .notif-freeze {
+            background: rgba(255,71,87,0.12);
+            border: 1px solid var(--red);
+            color: var(--red);
+        }
+
+        /* Watermark */
+        .watermark {
+            text-align: center;
+            color: rgba(255,255,255,0.06);
+            font-size: 10px;
+            padding: 15px;
+        }
+
+        @media (max-width: 400px) {
+            .balance-amount {
+                font-size: 30px;
+            }
+            .card {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
+        <h1><span>WALLET</span> TRANSFER</h1>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-content">
+
+        <!-- Balance Card -->
+        <div class="balance-card">
+            <div class="balance-label">Available Balance</div>
+            <div class="balance-amount" id="displayBalance">₹0</div>
+        </div>
+
+        <!-- Connected Account -->
+        <div class="card">
+            <div class="section-title"><i class="fas fa-link"></i> Connected Account</div>
+            <div class="connected-box" id="connectedBox">
+                <div class="no-data">No account connected</div>
+            </div>
+        </div>
+
+        <!-- Transfer Button -->
+        <button class="transfer-btn" id="transferBtn" onclick="handleTransfer()">
+            <i class="fas fa-exchange-alt"></i> TRANSFER BALANCE
+        </button>
+
+        <!-- Notification -->
+        <div class="notif-toast" id="notifToast"></div>
+
+        <div class="watermark">Revo Fixer © 2026</div>
+
+    </div>
+
+    <script>
+        // Firebase Configuration - REVO FIXER MAIN PROJECT
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7UVJOB_jWbPuRAqkVXJfq4MgOYUS8hds",
+            authDomain: "revo-fixer-18514.firebaseapp.com",
+            databaseURL: "https://revo-fixer-18514-default-rtdb.firebaseio.com",
+            projectId: "revo-fixer-18514",
+            storageBucket: "revo-fixer-18514.firebasestorage.app",
+            messagingSenderId: "556764878482",
+            appId: "1:556764878482:web:ba5c72a25db0127572384b"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+            window.location.href = 'index.html';
+        }
+
+        let userBalance = 0;
+        let transferStatus = 'success';
+
+        function goBack() {
+            window.location.href = 'dashboard.html';
+        }
+
+        // Load User Balance
+        function loadUserData() {
+            db.ref('users/' + userId).on('value', (snapshot) => {
+                if (!snapshot.exists()) return;
+                
+                const data = snapshot.val();
+                userBalance = data.balance || 0;
+                
+                // Update balance display
+                document.getElementById('displayBalance').textContent = '₹' + userBalance.toLocaleString();
+                
+                // Display connections
+                displayConnections(data.connections);
+            });
+        }
+
+        function displayConnections(connections) {
+            const box = document.getElementById('connectedBox');
+            
+            if (!connections || (!connections.username && !connections.bettingLink)) {
+                box.innerHTML = '<div class="no-data">No account connected</div>';
+                return;
+            }
+            
+            let html = '';
+            if (connections.username) {
+                html += `<div class="connected-row">
+                    <span class="connected-label">Username</span>
+                    <span class="connected-value">${escapeHtml(connections.username)}</span>
+                </div>`;
+            }
+            if (connections.bettingLink) {
+                html += `<div class="connected-row">
+                    <span class="connected-label">Betting Link</span>
+                    <span class="connected-value"><a href="${connections.bettingLink}" target="_blank" style="color:var(--blue);">${connections.bettingLink}</a></span>
+                </div>`;
+            }
+            box.innerHTML = html;
+        }
+
+        // Load Transfer Settings
+        function loadTransferSettings() {
+            db.ref('appSettings/walletTransfer').on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    transferStatus = snapshot.val().status || 'success';
+                }
+            });
+        }
+
+        // Handle Transfer
+        function handleTransfer() {
+            const btn = document.getElementById('transferBtn');
+            const notif = document.getElementById('notifToast');
+
+            btn.disabled = true;
+            notif.classList.remove('show');
+
+            setTimeout(() => {
+                btn.disabled = false;
+
+                // Check balance
+                if (userBalance <= 0) {
+                    notif.textContent = '⚠️ Insufficient balance. Please add funds first.';
+                    notif.className = 'notif-toast notif-insufficient show';
+                    return;
+                }
+
+                if (transferStatus === 'freeze') {
+                    notif.textContent = '❄️ Transfers are currently frozen. Contact @RevoAgent';
+                    notif.className = 'notif-toast notif-freeze show';
+                    return;
+                }
+
+                if (transferStatus === 'insufficient') {
+                    notif.textContent = '⚠️ Transfer limit not met. Minimum balance required: ₹500';
+                    notif.className = 'notif-toast notif-insufficient show';
+                    return;
+                }
+
+                // Success
+                notif.textContent = '✅ Transfer successful! Amount will be processed within 24 hours.';
+                notif.className = 'notif-toast notif-success show';
+
+                // Add activity log
+                db.ref('users/' + userId + '/activity').push({
+                    text: '💰 Wallet transfer requested - Amount: ₹' + userBalance.toLocaleString(),
+                    time: Date.now()
+                });
+
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 5000);
+            }, 800);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // Initialize
+        loadUserData();
+        loadTransferSettings();
+    </script>
+</body>
+</html>
